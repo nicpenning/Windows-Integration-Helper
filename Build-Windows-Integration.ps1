@@ -7,7 +7,7 @@ $customEvent = Get-WinEvent -LogName $customLogName -MaxEvents 100000
 
 # Redacted Parameters
 $redactedHostParameters = @("TEST", "WIN10")
-$redactedUserParameters = @("TEST", "TOPSY")
+$redactedUserParameters = @("TEST", "MSCOTT")
 $redactedDomainParameters = @("my.org.local", "local")
 
 $customIdsFound = $customEvent.Id | Select-Object -Unique
