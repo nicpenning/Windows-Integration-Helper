@@ -15,6 +15,7 @@
 # Generate test files with elastic-package test pipeline --data-streams <data-stream-name> --generate
 # Generate sample_event file with elastic-package test system --data-streams <data-stream-name> --generate
 # Update _dev/build/docs/README.md with new data stream information
+# Update .github/CODEOWNERS with /packages/windows/data_stream/<data-stream-name @elastic/security-external-integrations
 # Build the elastic-package
 # Submit a PR once there are no errors and the events look valid and do not contain any sensitive information, user names, computer names, etc..
 
