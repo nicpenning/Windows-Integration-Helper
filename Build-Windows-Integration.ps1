@@ -2,13 +2,29 @@
 #$testEventAppLockerEXE = Get-WinEvent -LogName "Microsoft-Windows-AppLocker/EXE and DLL" -MaxEvents 100000 | Where-Object {$_.Id -eq 8003}
 #$testEventAppLockerMSI = Get-WinEvent -LogName "Microsoft-Windows-AppLocker/MSI and Script" -MaxEvents 100000 | Where-Object {$_.Id -eq 8006}
 
-$customLogName = "Microsoft-Windows-AppLocker/Packaged app-Deployment"
+# Copy latest integration into data stream directory
+# Rename Copy to <new data stream by using channel name>
+# Delete all files int _dev/test
+# Copy over test-events from this script into that directory
+# Update agent/stream/winlog.yml.hbs file with current Channel name
+# Update elasticsearch/ingest_pipeline/default.yml with current Channel name
+# Update base fields event.data constant keyword to windows.<data-stream-name>
+# Update <data-stream>/manifest.yml file - Title, streams/title, streams/description, input/title, input/description, input/vars/name:search/default
+# Delete sample_event.json
+# Update Data Stream - manifest.yml, changelog.yml
+# Generate test files with elastic-package test pipeline --data-streams <data-stream-name> --generate
+# Generate sample_event file with elastic-package test system --data-streams <data-stream-name> --generate
+# Update _dev/build/docs/README.md with new data stream information
+# Build the elastic-package
+# Submit a PR once there are no errors and the events look valid and do not contain any sensitive information, user names, computer names, etc..
+
+$customLogName = "Microsoft-Windows-AppLocker/Packaged app-Execution"
 $customEvent = Get-WinEvent -LogName $customLogName -MaxEvents 100000
 
 # Redacted Parameters
-$redactedHostParameters = @("TEST", "WIN10")
-$redactedUserParameters = @("TEST", "MSCOTT")
-$redactedDomainParameters = @("my.org.local", "local")
+$redactedHostParameters = @("Finance-10", "WIN10")
+$redactedUserParameters = @("DSCHRUTE", "USER75")
+$redactedDomainParameters = @("schrute.farms.local", "local")
 
 $customIdsFound = $customEvent.Id | Select-Object -Unique
 Write-Host "All custom IDs"
@@ -127,7 +143,7 @@ function Generate-WinLog-Object ($eventToParse) {
             name = $eventMetaData.MachineName.Replace("$($redactedHostParameters[0])","$($redactedHostParameters[1])").Replace("$($redactedDomainParameters[0])","$($redactedDomainParameters[1])") -replace "`0"
         }
         log = [PSCustomObject]@{
-            level = $eventMetaData.LevelDisplayName
+            level = $eventMetaData.LevelDisplayName -replace "`0"
         }
         message = $eventMetaData.Message.Replace("$($redactedUserParameters[0])","$($redactedUserParameters[1])").Replace("$($redactedDomainParameters[0])","$($redactedDomainParameters[1])") -replace "`0"
         winlog = [PSCustomObject]@{
@@ -139,9 +155,9 @@ function Generate-WinLog-Object ($eventToParse) {
             level = $eventMetaData.LevelDisplayName -replace "`0"
             opcode = $eventMetaData.OpcodeDisplayName -replace "`0"
             process = [PSCustomObject]@{
-                pid = $eventMetaData.ProcessId -replace "`0"
+                pid = [int]$($eventMetaData.ProcessId -replace "`0")
                 thread = [PSCustomObject]@{
-                    id = $eventMetaData.ThreadId -replace "`0"
+                    id = [int]$($eventMetaData.ThreadId -replace "`0")
                 }
             }
             provider_guid = $eventMetaData.ProviderId.Guid -replace "`0"
